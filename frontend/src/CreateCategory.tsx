@@ -14,8 +14,7 @@ function CreateCategory() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchCategories = async () => {
+const fetchCategories = async () => {
       try {
         const response = await fetch(`${API_URL}/categories`);
         if (!response.ok) {
@@ -30,17 +29,13 @@ function CreateCategory() {
         setLoading(false);
       }
     };
-
+  useEffect(() => {
     fetchCategories();
   }, []);
 
-  const parentCategories = categories.filter(
-    (category) => category.parent_id === null
-  );
-
-  const addCategory = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
+  
+  const addCategory = async () => {
+    
     const url = new URL(`${API_URL}/category`);
     url.searchParams.append("name", name);
 
@@ -63,6 +58,7 @@ function CreateCategory() {
     } catch (error) {
       console.error("Error adding category:", error);
     }
+    fetchCategories();
   };
 
   return (
@@ -87,7 +83,7 @@ function CreateCategory() {
           disabled={loading}
         >
           <option value="">No parent</option>
-          {parentCategories.map((category) => (
+          {categories.map((category) => (
             <option key={category.id} value={category.id}>
               {category.name}
             </option>

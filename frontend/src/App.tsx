@@ -21,7 +21,7 @@ export default function App() {
 
   const addUser = async () => {
     await fetch(
-      `${API_URL}/users?name=Demir2&email=demir2@test.com`,
+      `${API_URL}/users?name=Demir32&email=demir22@test.com`,
       { method: "POST" }
     );
     loadUsers();
