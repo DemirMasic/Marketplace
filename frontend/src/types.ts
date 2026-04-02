@@ -13,9 +13,9 @@ export type Category = {
   parent_id: number | null;
 };
 export type Attribute = {
-  id: number;
+  id?: number;
   name: string;
-  category_id: number | null;
+  category_id?: number | null;
   data_type: DataTypeEnum;
   multiple_choice: boolean;
   user_written: boolean;
