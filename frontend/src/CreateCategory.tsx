@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
+import type { Attribute, Category } from "./types";
 
-type Category = {
-  id: number;
-  name: string;
-  parent_id: number | null;
-};
+
 
 function CreateCategory() {
   const API_URL = "http://localhost:8000";
@@ -13,6 +10,7 @@ function CreateCategory() {
   const [parentId, setParentId] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [attributes, setAttributes] = useState<Attribute[]>([])
 
 const fetchCategories = async () => {
       try {
