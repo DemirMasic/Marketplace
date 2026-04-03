@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import type { Attribute, Category } from "./types";
-import AttributeForm from "./AttributeForm";
+import type { Attribute, Category } from "../types";
+import AttributeForm from "./components/AttributeForm";
 import { Outlet } from "react-router-dom";
+import { AttributeList } from "./components/AttributeList";
 
 function CreateCategory() {
   const API_URL = "http://localhost:8000";
@@ -11,6 +12,7 @@ function CreateCategory() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [attributes, setAttributes] = useState<Attribute[]>([]);
+  const [nullAttributes, setNullAttributes] = useState<Attribute[]>([]);
 
   const fetchCategories = async () => {
     try {
@@ -27,14 +29,34 @@ function CreateCategory() {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchCategories();
   }, []);
-  useEffect(() => {
-    console.log(attributes);
-  }, [attributes]);
 
-  const addCategory = async () => {
+  const fetchNullAttributes = async () => {
+    try {
+      const response = await fetch(`${API_URL}/attributes?null_attribute=true`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch attributes");
+      }
+
+      const data: Attribute[] = await response.json();
+      setNullAttributes(data);
+    } catch (error) {
+      console.error("Error fetching attributes:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNullAttributes();
+  }, []);
+
+  const addCategory = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
     const url = new URL(`${API_URL}/category`);
     url.searchParams.append("name", name);
 
@@ -51,18 +73,53 @@ function CreateCategory() {
         throw new Error("Failed to add category");
       }
 
-      console.log("Category added");
+      const createdCategory: Category = await response.json();
+      console.log("Category added:", createdCategory);
+
+      const attributesWithCategoryId = attributes.map((attribute) => ({
+        ...attribute,
+        category_id: createdCategory.id,
+      }));
+
+      if (attributesWithCategoryId.length > 0) {
+        const response2 = await fetch(`${API_URL}/attributes`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(attributesWithCategoryId),
+        });
+
+        if (!response2.ok) {
+          throw new Error("Failed to add attributes");
+        }
+
+        const createdAttributes = await response2.json();
+        console.log("Attributes added:", createdAttributes);
+      }
+
       setName("");
       setParentId("");
+      setAttributes([]);
+
+      fetchCategories();
+      fetchNullAttributes();
     } catch (error) {
       console.error("Error adding category:", error);
     }
-    fetchCategories();
   };
 
   return (
     <>
-      <form onSubmit={addCategory}>
+      <form
+        onSubmit={addCategory}
+        style={{
+          border: "1px solid #ccc",
+          padding: "16px",
+          borderRadius: "8px",
+          marginBottom: "20px",
+        }}
+      >
         <div>
           <label htmlFor="name">Category name:</label>
           <input
@@ -95,6 +152,7 @@ function CreateCategory() {
       </form>
 
       <AttributeForm attributes={attributes} setAttributes={setAttributes} />
+      <AttributeList attributes={[...nullAttributes, ...attributes]} />
       <Outlet />
     </>
   );

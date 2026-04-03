@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { DataTypeEnum, type Attribute } from "./types";
+import { DataTypeEnum, type Attribute } from "../../types";
 
 type Props = {
   attributes: Attribute[];
@@ -27,7 +27,12 @@ const AttributeForm = ({ attributes, setAttributes }: Props) => {
   };
 
   return (
-    <form onSubmit={addAttribute}>
+    <form onSubmit={addAttribute} style={{
+    border: "1px solid #ccc",
+    padding: "16px",
+    borderRadius: "8px",
+    marginBottom: "20px"
+  }}>
       <div>
         <label htmlFor="name">Attribute name:</label>
         <input

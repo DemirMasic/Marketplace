@@ -1,7 +1,7 @@
-import Categories from "./Categories";
-import CreateCategory from "./CreateCategory";
+import Categories from "./views/Categories";
+import CreateCategory from "./views/CreateCategory";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import Test from "./test";
+import Test from "./views/Test";
 
 export default function App() {
   
