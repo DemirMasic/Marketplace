@@ -20,3 +20,10 @@ export type Attribute = {
   multiple_choice: boolean;
   user_written: boolean;
 };
+
+export type AttributeData = {
+  id?: number;
+  name: string;
+  attribute_id: number;
+  
+};
