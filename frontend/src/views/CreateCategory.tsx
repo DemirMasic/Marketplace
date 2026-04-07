@@ -147,6 +147,9 @@ function CreateCategory() {
 
   return (
     <>
+      <head>
+        <title>Create Category</title>
+      </head>
       <form
         onSubmit={addCategory}
         className="px-18"

@@ -67,11 +67,17 @@ function Categories() {
   };
 
   return (
+    <>
+    <head>
+      <title>Categories</title>
+    </head>
     <div className="px-18 bg-gray-100 ">
       
       {renderTree(null, 0)}
     </div>
+    </>
   );
+  
 }
 
 export default Categories;
