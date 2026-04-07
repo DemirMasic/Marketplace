@@ -149,31 +149,29 @@ function CreateCategory() {
     <>
       <form
         onSubmit={addCategory}
-        style={{
-          border: "1px solid #ccc",
-          padding: "16px",
-          borderRadius: "8px",
-          marginBottom: "20px",
-        }}
+        className="px-18"
       >
-        <div>
-          <label htmlFor="name">Category name:</label>
+        <div className="rounded border border-gray-400 px-3 py-2 bg-white">
+          <label htmlFor="name" className="font-medium pr-2">Category name:</label>
           <input
             id="name"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
+            className="border-2"
+            placeholder="Type here"
           />
         </div>
 
-        <div>
-          <label htmlFor="parentId">Parent category:</label>
+        <div className="rounded border border-gray-400 px-3 py-2 bg-white">
+          <label htmlFor="parentId" className="font-medium pr-2">Parent category:</label>
           <select
             id="parentId"
             value={parentId}
             onChange={(e) => setParentId(e.target.value)}
             disabled={loading}
+            className="border-2"
           >
             <option value="">No parent</option>
             {categories.map((category) => (
@@ -184,7 +182,7 @@ function CreateCategory() {
           </select>
         </div>
 
-        <button type="submit">Add Category</button>
+        <button type="submit" className="rounded border border-gray-500 px-4 py-2 bg-white hover:bg-gray-200">Add Category</button>
       </form>
 
       <AttributeForm attributes={attributes} setAttributes={setAttributes} />

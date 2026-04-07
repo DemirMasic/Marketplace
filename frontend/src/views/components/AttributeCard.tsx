@@ -16,12 +16,7 @@ console.log(attributeData)
 
  return (
    
-    <div style={{
-    border: "1px solid #ccc",
-    padding: "16px",
-    borderRadius: "8px",
-    marginBottom: "20px"
-  }}>
+    <div className="rounded border border-gray-400 px-1 py-2 bg-white">
         <p>Attribute name: {attribute.name}</p>
         <p>Data type: {attribute.data_type}</p>
         <p>Multiple choice: {attribute.multiple_choice==true ? "true":"false"}</p>
