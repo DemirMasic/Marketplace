@@ -1,6 +1,8 @@
+import { useAuth } from "../../contexts/AuthProvider";
 
 
 export default function Navbar() {
+  const {userName, logout} = useAuth()
   return (
     <header className="w-full border-b border-gray-200 bg-gray-300 mb-10">
       <div className="mx-auto flex items-center justify-between px-4 py-3">
@@ -28,7 +30,7 @@ export default function Navbar() {
         </div>
 
         {/* Right side */}
-        <div className="hidden items-center gap-4 lg:flex">
+        {!userName ? <div className="hidden items-center gap-4 lg:flex">
           <a href="/login"><button className="rounded-md px-3 py-2 text-sm font-medium bg-white text-slate-800 hover:bg-gray-100">
             Sign in
           </button></a>
@@ -36,7 +38,9 @@ export default function Navbar() {
           <button className="rounded-md bg-green-500 px-4 py-2 text-sm font-semibold text-white hover:bg-green-400">
             Sign up
           </button>
-        </div>
+        </div>: <div> <button onClick={logout} className="rounded-md px-3 py-2 text-sm font-medium bg-white text-slate-800 hover:bg-gray-100">
+            Logout
+          </button></div>}
       </div>
 
       {/* Search row */}

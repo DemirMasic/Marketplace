@@ -9,6 +9,7 @@ import Login from "./views/Login";
 import { AuthProvider } from "./contexts/AuthProvider";
 import IsAuthenticated from "./views/components/IsAuthenticated";
 import IsAuthorized from "./views/components/IsAuthorized";
+import CreateListing from "./views/CreateListing";
 
 export default function App() {
   console.log("hello from app")
@@ -19,11 +20,12 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Categories />} />
-            <Route path="/create" element={<IsAuthenticated fallback={<Categories></Categories>}><CreateCategory /></IsAuthenticated>}></Route>
-            <Route path="/categories" element={<IsAuthorized><Categories /></IsAuthorized>}></Route>
+            <Route path="/categories" element={<IsAuthenticated fallback={<Login></Login>}><Categories /></IsAuthenticated>}></Route>
+            <Route path="/create" element={<IsAuthorized><CreateCategory /></IsAuthorized>}></Route>
             <Route path="/listings" element={<Listings />}></Route>
             <Route path="/imageupload" element={<ImageUpload />}></Route>
             <Route path="/login" element={<Login />}></Route>
+            <Route path="/createlisting" element={<CreateListing />}></Route>
           </Routes>
         </BrowserRouter>
       </AuthProvider>

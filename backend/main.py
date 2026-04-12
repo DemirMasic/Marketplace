@@ -8,7 +8,7 @@ import jwt
 from jwt.exceptions import InvalidTokenError
 from pwdlib import PasswordHash
 from pydantic import BaseModel
-from sqlalchemy import null
+from sqlalchemy import null, or_
 
 from fastapi import FastAPI, status, HTTPException, Depends, UploadFile, File
 from sqlalchemy.orm import Session
@@ -271,6 +271,24 @@ def get_attributes(null_attribute: Optional[bool] = False, db: Session = Depends
          
     return query.all()
 
+
+@app.get("/attributes_for_create_listing", tags=["Attribute"])
+def get_attributes(category_id: Optional[int] = None, db: Session = Depends(get_db)):
+    attribute_query = db.query(Attribute).filter(or_(
+        Attribute.category_id == category_id,
+        Attribute.category_id.is_(None)
+    )).all()
+    filtered_ids = []
+    for att in attribute_query:
+        filtered_ids.append(att.id)
+
+    print(filtered_ids, "idovi filter")
+    data_query = db.query(AttributeData).filter(AttributeData.attribute_id.in_(filtered_ids)).all()
+    print(data_query)
+
+
+    return [attribute_query, data_query]
+
 @app.post("/attribute_data", tags=["Attribute data"])
 def create_attribute_data(
     name: str,
@@ -288,6 +306,8 @@ def create_attribute_data(
 @app.get("/attribute_data", tags=["Attribute data"])
 def get_attributes(db: Session = Depends(get_db)):
     return db.query(AttributeData).all()
+
+
 
 class AttributeDataClass(BaseModel):
     name: str
@@ -321,6 +341,14 @@ def create_attribute_datas(
     
 
     return created_attribute_data
+
+
+@app.get("/attribute_datas", tags=["Attribute data"])
+def get_attribute_datas(
+    attribute_ids: List[int],
+    db: Session = Depends(get_db)
+):
+    return db.query(AttributeData).filter(AttributeData.attribute_id in attribute_ids).all()
 
 
 
