@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthProvider";
 
-function Login() {
+function Registration() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -104,4 +104,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default Registration;
