@@ -13,7 +13,6 @@ import CreateListing from "./views/CreateListing";
 import Registration from "./views/Registration";
 
 export default function App() {
-  console.log("hello from app")
   return (
     <div className="bg-gray-100">
       <AuthProvider>

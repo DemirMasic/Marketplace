@@ -5,14 +5,14 @@ export default function Navbar() {
   const { userName, userId, logout } = useAuth();
 
   const [userRole, setUserRole] = useState<String>("");
-    console.log("ovo je to");
+    
   
     
     const get_role = async (userId: string) => {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/get_role?id=${userId}`);
       const data = await res.json();
       setUserRole(data);
-      console.log(data, "DATA");
+      
     };
 
     useEffect(() => {
