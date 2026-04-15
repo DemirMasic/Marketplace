@@ -115,7 +115,6 @@ function CreateListing() {
       }
 
       const createdListing = await response.json();
-      console.log(imageFiles, "selected image files");
       for (const imageFile of imageFiles) {
         const formData = new FormData();
         formData.append("image", imageFile);
@@ -144,6 +143,7 @@ function CreateListing() {
           String(createdListing.id),
         );
         listingImageUrl.searchParams.append("image_url", uploadedImage.url);
+        console.log(uploadedImage.url)
 
         const listingImageResponse = await fetch(listingImageUrl.toString(), {
           method: "POST",
