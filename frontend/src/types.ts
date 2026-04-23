@@ -26,6 +26,18 @@ export type Attribute = {
   multiple_choice: boolean;
   user_written: boolean;
 };
+export type ListingImage = {
+  image_url: string;
+  id: number;
+  listing_id: number;
+}
+export type Listing = {
+  id: number;
+  name: string;
+  category_id: number;
+  user_id: number;
+  description: string;
+};
 
 export type AttributeData = {
   id?: number;
@@ -44,4 +56,5 @@ export type RegisterData = {
   username: string;
   password: string;
 }
+
 

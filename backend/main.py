@@ -358,6 +358,18 @@ def get_attribute_datas(
 def get_listings(db: Session = Depends(get_db)):
     return db.query(Listing).all()
 
+@app.get("/listing_by_id", tags=["Listing"])
+def get_listings(id: int, db: Session = Depends(get_db)):
+    listing_data = db.query(Listing).filter(Listing.id == id).first()
+    attributes = db.query(Attribute).filter(or_(Attribute.category_id == listing_data.category_id, Attribute.category_id == None)).all()
+    listing_attribute_data = db.query(ListingAttributeData).filter(ListingAttributeData.listing_id == id).all()
+    images = db.query(ListingImages).filter(ListingImages.listing_id == id).all()
+    return {
+        "listing": listing_data,
+        "attributes": attributes,
+        "listing_attribute_data": listing_attribute_data,
+        "images": images
+    }
 
 @app.post("/create_listing", tags=["Listing"])
 def create_listing(

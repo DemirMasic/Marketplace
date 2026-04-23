@@ -1,13 +1,8 @@
 import { useEffect, useState } from "react";
 import { ListingCard } from "./components/ListingCard";
+import type { Listing } from "../types";
 
-type Listing = {
-  id: number;
-  name: string;
-  category_id: number;
-  user_id: number;
-  description: string;
-};
+
 
 function Listings() {
   const [listings, setListings] = useState<Listing[]>([]);

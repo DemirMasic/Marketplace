@@ -11,6 +11,7 @@ import IsAuthenticated from "./views/components/IsAuthenticated";
 import IsAuthorized from "./views/components/IsAuthorized";
 import CreateListing from "./views/CreateListing";
 import Registration from "./views/Registration";
+import IndividualListing from "./views/IndividualListing";
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
             <Route path="/login" element={<Login />}></Route>
             <Route path="/register" element={<Registration />}></Route>
             <Route path="/createlisting" element={<IsAuthenticated fallback={<Login></Login>}><CreateListing /></IsAuthenticated>}></Route>
+            <Route path="/listing/:id" element={<IndividualListing />}></Route>
           </Routes>
         </BrowserRouter>
       </AuthProvider>
