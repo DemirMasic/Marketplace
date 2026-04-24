@@ -42,7 +42,7 @@ export const ListingImageCarousel = ({ images }: Props) => {
           className="h-105 w-full object-cover"
         />
 
-        <button
+        {images.length > 1 ?<><button
           type="button"
           onClick={() => plusSlides(-1)}
           className="absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/50 px-4 py-3 text-2xl text-white transition hover:bg-black/80"
@@ -57,6 +57,8 @@ export const ListingImageCarousel = ({ images }: Props) => {
         >
           &#10095;
         </button>
+        </>
+        : null}
       </div>
 
       

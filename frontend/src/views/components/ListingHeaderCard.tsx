@@ -12,7 +12,7 @@ export const ListingHeaderCard = ({ title, price, images }: Props) => {
  
 
   return (
-    <div className="mx-auto max-w-4xl rounded-2xl bg-white p-6 shadow-lg">
+    <div className="mx-auto max-w-4xl bg-white p-6 shadow-lg">
   <h1 className="mb-2 text-3xl font-bold text-gray-900">
     {title}
   </h1>

@@ -30,6 +30,7 @@ function Listings() {
         {listings.map((listing) => (
           <ListingCard key={listing.id} listing={listing} />
         ))}
+        
       </div>
 
       {listings.length === 0 && (

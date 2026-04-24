@@ -57,4 +57,11 @@ export type RegisterData = {
   password: string;
 }
 
+export type ListingAttributeData = {
+  attribute_id: number;
+  value: string;
+  listing_id: number;
+  id: number;
+}
+
 
