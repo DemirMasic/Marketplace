@@ -1,5 +1,6 @@
 from datetime import timedelta, timezone, datetime
 from http.client import HTTPException
+import json
 from typing import Annotated, List, Optional
 import uuid
 
@@ -8,11 +9,12 @@ import jwt
 from jwt.exceptions import InvalidTokenError
 from pwdlib import PasswordHash
 from pydantic import BaseModel
-from sqlalchemy import null, or_
+from sqlalchemy import Float, and_, cast, null, or_, select
 
-from fastapi import FastAPI, status, HTTPException, Depends, UploadFile, File
+from fastapi import FastAPI, Query, status, HTTPException, Depends, UploadFile, File
 from sqlalchemy.orm import Session
 
+from filters import ExactFilter, Filter, RangeFilter, SearchFilter
 from constants import DataTypeEnum, RoleEnum
 from database import engine, Base, get_db
 from models import Attribute, AttributeData, Category, Listing, ListingAttributeData, ListingImages, UserModel
@@ -355,8 +357,43 @@ def get_attribute_datas(
 
 
 @app.get("/listings", tags=["Listing"])
-def get_listings(db: Session = Depends(get_db)):
-    return db.query(Listing).all()
+def get_listings(filters: str = Query(default='[]'), db: Session = Depends(get_db)):
+    raw = json.loads(filters)
+
+    parsed_filters: list[Filter] = [
+        ExactFilter(**f) if f['type'] == 'exact' else SearchFilter(**f) if f["type"]=="search" else RangeFilter(**f)
+        for f in raw
+    ]
+    query = select(Listing)
+    search = ""
+    matching_listing_ids = None
+    for f in parsed_filters:
+        
+        if isinstance(f, ExactFilter):
+            matching_listing_ids = select(ListingAttributeData.listing_id).where(
+                and_(
+                    ListingAttributeData.attribute_id == f.attributeId,
+                    ListingAttributeData.value == f.value
+                )
+            )
+
+        elif isinstance(f, RangeFilter):
+            conditions = [ListingAttributeData.attribute_id == f.attributeId]
+
+            if f.from_ is not None:
+                conditions.append(cast(ListingAttributeData.value, Float) >= float(f.from_))
+            if f.to is not None:
+                conditions.append(cast(ListingAttributeData.value, Float) <= float(f.to))
+
+            matching_listing_ids = select(ListingAttributeData.listing_id).where(and_(*conditions))
+        elif isinstance(f, SearchFilter):
+            search = f.value
+
+    if matching_listing_ids != None:
+        query = query.where(and_(Listing.name.ilike(f'%{search}%')),(Listing.id.in_(matching_listing_ids)))
+    else:
+        query = query.where(Listing.name.ilike(f'%{search}%'))
+    return db.execute(query).scalars().all()
 
 @app.get("/listing_by_id", tags=["Listing"])
 def get_listings(id: int, db: Session = Depends(get_db)):

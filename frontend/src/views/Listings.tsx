@@ -1,14 +1,19 @@
 import { useEffect, useState } from "react";
 import { ListingCard } from "./components/ListingCard";
 import type { Listing } from "../types";
+import { useFilters } from "../hooks/useFilter";
 
 
 
 function Listings() {
   const [listings, setListings] = useState<Listing[]>([]);
-
+  const { filters } = useFilters();
+  
+  
   const loadListings = async () => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/listings`);
+    const params = new URLSearchParams();
+    params.set('filters', JSON.stringify(filters));
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/listings?${params}`);
     const data = await res.json();
     setListings(data);
   };

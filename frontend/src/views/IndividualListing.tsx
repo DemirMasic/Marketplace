@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import type { Attribute, AttributeData, Listing, ListingImage } from "../types";
+import type { Attribute, Listing, ListingAttributeData, ListingImage } from "../types";
 import { ListingHeaderCard } from "./components/ListingHeaderCard";
 import { ListingAttributesCard } from "./components/ListingAttributesCard";
 
@@ -11,7 +11,7 @@ function IndividualListing() {
   console.log(id)
   const [listingData, setListingData] = useState<Listing>();
   const [attributes, setAttributes] = useState<Attribute[]>([]);
-  const [listingAttributeData, setListingAttributeData] = useState<AttributeData[]>([])
+  const [listingAttributeData, setListingAttributeData] = useState<ListingAttributeData[]>([])
   const [images, setImages] = useState<ListingImage[]>([])
 
 
