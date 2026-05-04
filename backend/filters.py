@@ -18,7 +18,11 @@ class SearchFilter(BaseModel):
     type: Literal['search']
     value: str
 
+class CategoryFilter(BaseModel):
+    type: Literal['category_id']
+    value: str
+
 Filter = Annotated[
-    Union[ExactFilter, RangeFilter, SearchFilter],
+    Union[ExactFilter, RangeFilter, SearchFilter, CategoryFilter],
     Field(discriminator='type')
 ]

@@ -51,14 +51,14 @@ function Categories() {
                 className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
               >
                 <button
-                  type="button"
-                  onClick={() => hasChildren && toggle(category.id)}
+  
+                  
                   className="flex w-full items-center justify-between text-left"
                 >
                   <div className="flex items-center gap-3">
                     
                     <div>
-                      <h2 className="text-lg font-semibold text-slate-900">{category.name}</h2>
+                      <a href={`/listings?category_id=${category.id}`} className="text-lg font-semibold text-slate-900">{category.name}</a>
                       <p className="text-sm text-slate-500">
                         {hasChildren ? "Browse subcategories" : "No subcategories"}
                       </p>
@@ -66,9 +66,9 @@ function Categories() {
                   </div>
 
                   {hasChildren && (
-                    <div className="text-slate-900">
+                    <button onClick={() => hasChildren && toggle(category.id)} className="flex flex-1 justify-end text-slate-900">
                       <FontAwesomeIcon icon={isOpen ? faChevronDown : faChevronRight} />
-                    </div>
+                    </button>
                   )}
                 </button>
 
@@ -84,19 +84,19 @@ function Categories() {
           return (
             <div key={category.id} className="rounded-xl border border-slate-200 bg-white">
               <button
-                type="button"
-                onClick={() => hasChildren && toggle(category.id)}
+            
+                
                 className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-left transition hover:bg-slate-50"
               >
-                <div className="flex items-center gap-3">
+                <a href={`/listings?category_id=${category.id}`} className="flex items-center gap-3">
                   
                   <span className="font-medium text-slate-800">{category.name}</span>
-                </div>
+                </a>
 
                 {hasChildren && (
-                  <div className="text-slate-900">
+                  <button onClick={() => hasChildren && toggle(category.id)} className="flex flex-1 justify-end text-slate-900">
                     <FontAwesomeIcon icon={isOpen ? faChevronDown : faChevronRight} />
-                  </div>
+                  </button>
                 )}
               </button>
 
