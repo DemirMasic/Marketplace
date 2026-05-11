@@ -3,13 +3,16 @@ import { ListingCard } from "./components/ListingCard";
 import type { Listing } from "../types";
 import { useFilters } from "../hooks/useFilter";
 import Categories from "./Categories";
+import { FilterBar } from "./components/FilterBar";
+import { useSearchParams } from "react-router-dom";
 
 
 
 function Listings() {
   const [listings, setListings] = useState<Listing[]>([]);
   const { filters } = useFilters();
-  
+  const [searchParams] = useSearchParams();
+  const category_id = searchParams.get("category_id")
   
   const loadListings = async () => {
     const params = new URLSearchParams();
@@ -21,7 +24,7 @@ function Listings() {
 
   useEffect(() => {
     loadListings();
-  }, [filters]);
+  }, [searchParams]);
 
   return (
     <div className="mx-auto justify-center flex flex-col w-full min-h-screen bg-slate-100 px-4 py-8 md:px-8">
@@ -30,6 +33,9 @@ function Listings() {
         <p className="mt-2 text-sm text-slate-600">
           Browse all available listings in the marketplace.
         </p>
+      </div>
+      <div>
+        <FilterBar categoryId={category_id || undefined}></FilterBar>
       </div>
       <div className="justify-center w-full flex flex-row">
         <div className="w-80">

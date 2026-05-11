@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { Attribute, AttributeData, Category } from "../types";
 import { Outlet } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-import { CreateListingAttributeList } from "./components/CreateListingAttributes";
+import { CreateListingAttribute } from "./components/CreateListingAttributes";
 
 
 type DecodedToken = {
@@ -346,7 +346,7 @@ function CreateListing() {
             </p>
           </div>
 
-          <CreateListingAttributeList
+          <CreateListingAttribute
             attributes={attributes}
             attributeData={attributeData}
             listingValues={listingValues}
