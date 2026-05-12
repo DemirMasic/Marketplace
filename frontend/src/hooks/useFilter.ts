@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router-dom';
 
-export type ExactFilter = { attributeId: string; type: 'exact'; value: string };
+export type ExactFilter = { attributeId: string; type: 'exact'; value?: string };
 export type RangeFilter = { attributeId: string; type: 'range'; from?: string; to?: string };
 export type SearchFilter = { type: 'search'; value: string };
 export type CategoryFilter = { type: 'category_id'; value: string };
@@ -28,7 +28,9 @@ export function useFilters() {
     const to          = searchParams.get(`value${i}_to`) ?? undefined;
 
     if (exact !== null) {
-      filters.push({ attributeId, type: 'exact', value: exact });
+      
+      filters.push({ attributeId, type: 'exact', value: exact});
+      
     } else if (from !== undefined || to !== undefined) {
       filters.push({ attributeId, type: 'range', from, to });
     }
@@ -70,7 +72,7 @@ export function useFilters() {
 
     params.set(`filter${n}`, filter.attributeId);
 
-    if (filter.type === "exact") {
+    if (filter.type === "exact" && filter.value) {
       
       params.set(`value${n}`, filter.value);
       

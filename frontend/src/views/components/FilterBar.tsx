@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { DataTypeEnum, type Attribute, type AttributeData } from "../../types";
 import { FilterBarOption } from "./FilterBarOption";
 import { FilterBarRange } from "./FilterBarRange";
+import { FilterBarBoolean } from "./FilterBarBoolean";
+import { FilterBarMultiple } from "./FilterBarMultiple";
 
 
 export const FilterBar = ({categoryId }: {categoryId?: string}) => {
@@ -27,9 +29,12 @@ export const FilterBar = ({categoryId }: {categoryId?: string}) => {
   return (
     <div className="bg-white w-full mx-auto">
         {attributeCat.map((ac) => (
-        !ac.user_written ? 
+        ac.multiple_choice ? <FilterBarMultiple attributeData={attributeCatData} key={ac.id} attribute={ac}></FilterBarMultiple>
+        : !ac.user_written && ac.data_type!==DataTypeEnum.BOOLEAN ? 
         <FilterBarOption attributeData={attributeCatData} key={ac.id} attribute={ac} />
-        : ac.user_written && ac.data_type===DataTypeEnum.NUMBER ? <FilterBarRange key={ac.id} attribute={ac}></FilterBarRange>:null
+        : ac.user_written && ac.data_type===DataTypeEnum.NUMBER ? <FilterBarRange key={ac.id} attribute={ac}></FilterBarRange>
+        : !ac.user_written && !ac.multiple_choice && ac.data_type===DataTypeEnum.BOOLEAN ? <FilterBarBoolean key={ac.id} attribute={ac}></FilterBarBoolean>: null
+        
         ))}
     </div>
 );
