@@ -26,7 +26,7 @@ export const FilterBar = ({ categoryId }: { categoryId?: string }) => {
   }, [categoryId]);
 
   return (
-    <div className="mx-auto mb-6 w-full max-w-6xl rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="mx-auto mb-6 w-full max-w-368 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-4 flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
         <div>
           <h2 className="text-sm font-semibold text-slate-900">Filters</h2>
