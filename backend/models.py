@@ -13,10 +13,17 @@ class UserModel(Base):
     username = Column(String,unique=True, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
+    location_id = Column(Integer, ForeignKey("locations.id"), nullable=True)
     role = Column(SQLEnum(RoleEnum))
     disabled = Column(Boolean, default=False)    
 
+    location = relationship("Location", backref="users")
 
+class Location(Base):
+    __tablename__ = "locations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
 
 
 class Category(Base):
@@ -61,6 +68,7 @@ class Listing(Base):
     user_id = Column(String, ForeignKey("users.id"))
     publishing_date = Column(DateTime, default=datetime.datetime.now)
     description = Column(String)
+
 
     category = relationship("Category", backref="listing")
     user = relationship("UserModel", backref="listing")

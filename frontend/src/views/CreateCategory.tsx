@@ -37,9 +37,10 @@ function CreateCategory() {
       if (!response.ok) {
         throw new Error("Failed to fetch attributes");
       }
-
+      
       const data: Attribute[] = await response.json();
-      setNullAttributes(data);
+      const filteredData = data.filter((d)=>d.id !== 2)
+      setNullAttributes(filteredData);
     } catch (error) {
       console.error("Error fetching attributes:", error);
     } finally {

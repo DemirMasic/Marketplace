@@ -19,7 +19,7 @@ export type Category = {
   parent_id: number | null;
 };
 export type Attribute = {
-  id?: number;
+  id: number;
   name: string;
   category_id?: number | null;
   data_type: DataTypeEnum;
@@ -63,5 +63,19 @@ export type ListingAttributeData = {
   listing_id: number;
   id: number;
 }
+
+export type User = {
+  username: string;
+  email: string;
+  role: RoleEnum;
+  location_id: number;
+  disabled: boolean;
+}
+
+export type Locations = {
+  id: number;
+  name: string; 
+}
+
 
 

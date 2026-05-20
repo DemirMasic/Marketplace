@@ -12,6 +12,7 @@ import IsAuthorized from "./views/components/IsAuthorized";
 import CreateListing from "./views/CreateListing";
 import Registration from "./views/Registration";
 import IndividualListing from "./views/IndividualListing";
+import ProfilePage from "./views/ProfilePage";
 
 export default function App() {
   return (
@@ -29,6 +30,7 @@ export default function App() {
             <Route path="/register" element={<Registration />}></Route>
             <Route path="/createlisting" element={<IsAuthenticated fallback={<Login></Login>}><CreateListing /></IsAuthenticated>}></Route>
             <Route path="/listing/:id" element={<IndividualListing />}></Route>
+            <Route path="/profilepage/:userId" element={<ProfilePage />}></Route>
           </Routes>
         </BrowserRouter>
       </AuthProvider>
