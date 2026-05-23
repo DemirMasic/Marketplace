@@ -3,6 +3,7 @@ import type { Locations, User } from "../../types";
 import locationpic from "../../assets/locationpic.png";
 import messagepic from "../../assets/messagepic.png";
 import profilepic from "../../assets/profilepic.png";
+import CheckoutButton from "./CheckoutButton";
 
 type ProfilePageInfoProps = {
   userData: User;
@@ -37,7 +38,8 @@ function ProfilePageInfo({userData, userId}: ProfilePageInfoProps) {
       <a href={`/messages/${userId}`} className="flex flex-row items-center gap-2">
         <img className="size-8" src={messagepic}></img>
         <p>Send Message</p>
-      </a> 
+      </a>
+      <CheckoutButton></CheckoutButton> 
     </div>
   );
 }
