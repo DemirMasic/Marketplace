@@ -59,6 +59,8 @@ class CheckoutRequest(BaseModel):
     product_name: str
     amount: int  # amount in cents
     quantity: int = 1
+    user_id: str
+    points: int
 
 @app.get("/")
 def root():
@@ -85,9 +87,9 @@ async def create_checkout_session(data: CheckoutRequest):
             success_url=f"{FRONTEND_URL}/payment-success?session_id={{CHECKOUT_SESSION_ID}}",
             cancel_url=f"{FRONTEND_URL}/payment-cancel",
             metadata={
-                # Add your own IDs here later
-                # "user_id": "...",
-                # "listing_id": "...",
+                "user_id": data.user_id,
+                "points": data.points
+               
             },
         )
 
@@ -98,7 +100,7 @@ async def create_checkout_session(data: CheckoutRequest):
 
 
 @app.post("/stripe-webhook")
-async def stripe_webhook(request: Request):
+async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature")
 
@@ -113,21 +115,25 @@ async def stripe_webhook(request: Request):
     except stripe.error.SignatureVerificationError:
         raise HTTPException(status_code=400, detail="Invalid signature")
 
-    if event["type"] == "checkout.session.completed":
-        session = event["data"]["object"]
+    if event.type == "checkout.session.completed":
+        session = event.data.object
 
-        customer_email = session.get("customer_details", {}).get("email")
-        payment_status = session.get("payment_status")
-        session_id = session.get("id")
+        session_id = session.id
+        payment_status = session.payment_status
 
-        # IMPORTANT:
-        # Here you update your database:
-        # - mark order as paid
-        # - activate subscription/access
-        # - store Stripe session ID
-        # - send confirmation email if needed
+        customer_email = None
+        if session.customer_details:
+            customer_email = session.customer_details.email
 
         print("Payment completed:", session_id, customer_email, payment_status)
+        print("session:", session.metadata.user_id)
+
+        user_id = session.metadata.user_id
+        points = session.metadata.points
+
+        user = db.query(UserModel).filter(UserModel.id == user_id).update({UserModel.points: UserModel.points + points})
+        db.commit()
+        db.refresh(user)
 
     return {"received": True}
 
@@ -145,6 +151,7 @@ class User(BaseModel):
     role: RoleEnum
     location_id: int
     disabled: bool
+    points: int
 
 class UserInDB(User):
     hashed_password: str
