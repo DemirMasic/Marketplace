@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 type Props = {
   title: string;
-  price: number;
+  price?: string;
   images: ListingImage[];
   id: string;
 };
@@ -36,7 +36,7 @@ export const ListingHeaderCard = ({ title, price, images, id }: Props) => {
     </button>
     </div>
   <h4 className="mb-4 text-2xl font-semibold text-orange-400">
-    €{price}
+    {price? `€${price}`:"Contact for price"}
   </h4>
 
   <div className="mt-4">
