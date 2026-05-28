@@ -44,9 +44,11 @@ function ProfilePage() {
   return (
     user && userId ? 
     <div>
+      <div className="flex sm:flex-row flex-col items-center">
     <ProfilePageInfo userId={userId} userData={user}></ProfilePageInfo>
-    <ProfilePageListings listings={listings} listingImages={listingImages} listingsData={listingsData}></ProfilePageListings>
     <BuyPoints userId={userId}></BuyPoints>
+      </div>
+    <ProfilePageListings listings={listings} listingImages={listingImages} listingsData={listingsData}></ProfilePageListings>
     </div>
     : null
   );

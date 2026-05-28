@@ -10,12 +10,12 @@ type ProfilePageListingsProps = {
 
 function ProfilePageListings({listings, listingsData, listingImages}: ProfilePageListingsProps) {
   return (
-    <div className="mx-auto justify-center flex flex-col w-full min-h-screen bg-slate-100 px-4 py-8 md:px-8">
+    <div className="mx-auto justify-center items-center flex flex-col w-full min-h-screen bg-slate-100 px-4 py-8 md:px-8">
       
-      <div className="justify-center w-full flex flex-row">
+      <div className="justify-center items-center w-full flex flex-row">
         
         {listings.length > 0 && (
-        <div className="items-start w-full auto-rows-min grid max-w-6xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="items-start mx-auto w-full auto-rows-min grid max-w-6xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {listings.map((listing) => (
             <ListingCard listingsData={listingsData} listingImages={listingImages} key={listing.id} listing={listing} />
           ))}

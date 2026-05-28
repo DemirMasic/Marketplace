@@ -25,7 +25,7 @@ function ProfilePageInfo({userData, userId}: ProfilePageInfoProps) {
       loadLocations();
     }, []);
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex sm:flex-col flex-row gap-2 py-6 sm:py-0">
       <span className="flex flex-row items-center gap-2">
         <img className="size-8" src={profilepic}></img>
         <p>{userData.username}</p>
