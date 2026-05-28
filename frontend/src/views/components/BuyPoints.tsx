@@ -16,6 +16,7 @@ export const BuyPoints = ({userId} : ProfilePageInfoProps)=>{
       <CheckoutButton userId={userId} points={100} amount={180}></CheckoutButton> 
       <CheckoutButton userId={userId} points={200} amount={350}></CheckoutButton> 
       <CheckoutButton userId={userId} points={500} amount={600}></CheckoutButton> 
+    
       </div>
       </div>
   );

@@ -553,6 +553,16 @@ def create_listing(
 
     return listing
 
+@app.delete("/delete_listing", tags=["Listing"])
+def delete_listing(id: int, db: Session = Depends(get_db)):
+
+    listing = db.query(Listing).filter(Listing.id == id).first()
+    if listing:
+        db.delete(listing)
+        db.commit()
+        return {"deleted": True}
+    return {"deleted": False}
+
 
 @app.get("/listings_attribute_data", tags=["Listing"])
 def get_listings_data(db: Session = Depends(get_db)):

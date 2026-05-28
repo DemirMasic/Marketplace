@@ -30,10 +30,13 @@ function IndividualListing() {
 
   console.log(listingData, attributes, listingAttributeData, images)
   return (
-    <>
-    <ListingHeaderCard title={listingData?.name || ''} price={2000} images={images}></ListingHeaderCard>
+    
+    
+    id ? <> 
+    <ListingHeaderCard id={id} title={listingData?.name || ''} price={2000} images={images}></ListingHeaderCard>
     <ListingAttributesCard attributes={attributes} attributesData={listingAttributeData}></ListingAttributesCard>
-    </>
+    </> : null
+    
   );
 }
 
