@@ -1,12 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { RoleEnum, type RegisterData } from "../types";
+import { RoleEnum, type Locations, type RegisterData } from "../types";
 
 function Registration() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [locations, setLocations] = useState<Locations[]>([])
+  const [locationId, setLocationId] = useState<string>("1")
   
+  const loadLocations = async () => {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/locations`);
+    const data = await res.json();
+    setLocations(data);
+  };
+  useEffect(() => {
+    loadLocations();
+  }, []);
+
   const register = async (data: RegisterData) => {
      
 
@@ -16,12 +27,13 @@ function Registration() {
       fetchUrl.searchParams.append("password", data.password);
       fetchUrl.searchParams.append("role", RoleEnum.USER );
       fetchUrl.searchParams.append("disabled", "false")
+      fetchUrl.searchParams.append("location_id", locationId)
   
       const response = await fetch(fetchUrl, {
         method: "POST"
       });
   
-  
+      
       if (!response.ok) {
         throw new Error("Registration failed");
       }
@@ -116,6 +128,30 @@ function Registration() {
               placeholder="Enter your password"
               className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-200 disabled:cursor-not-allowed disabled:bg-slate-100"
             />
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="location"
+              className="block text-sm font-semibold text-slate-700"
+            >
+              Location
+            </label>
+            <select
+              id="location"
+              name="location"
+              required
+              disabled={loading}
+              value={locationId}
+              onChange={(e) => setLocationId(e.target.value)}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-200 disabled:cursor-not-allowed disabled:bg-slate-100">
+               {locations.map((location) => (
+                    <option key={location.id} value={location.id}>
+                      {location.name}
+                    </option>
+                  ))} 
+            </select>
+  
           </div>
 
           {error && (

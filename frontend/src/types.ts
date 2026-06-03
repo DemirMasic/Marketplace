@@ -35,8 +35,9 @@ export type Listing = {
   id: number;
   name: string;
   category_id: number;
-  user_id: number;
+  user_id: string;
   description: string;
+  highlighted_until?: string;
 };
 
 export type AttributeData = {

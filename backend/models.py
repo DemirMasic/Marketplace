@@ -69,6 +69,7 @@ class Listing(Base):
     user_id = Column(String, ForeignKey("users.id"))
     publishing_date = Column(DateTime, default=datetime.datetime.now)
     description = Column(String)
+    highlighted_until = Column(DateTime, default=datetime.datetime.now)
 
 
     category = relationship("Category", backref="listing")

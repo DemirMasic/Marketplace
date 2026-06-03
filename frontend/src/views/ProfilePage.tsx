@@ -28,7 +28,6 @@ function ProfilePage() {
     const res = await fetch(`${import.meta.env.VITE_API_URL}/get_user_by_id?user_id=${userId}`);
     const data = await res.json();
     setUser(data);
-    console.log("ova data", data)
   };
  
   
@@ -40,17 +39,28 @@ function ProfilePage() {
     loadUserData();
     
   }, []);
-  console.log(listings)
   return (
-    user && userId ? 
-    <div>
-      <div className="flex sm:flex-row flex-col items-center">
-    <ProfilePageInfo userId={userId} userData={user}></ProfilePageInfo>
-    <BuyPoints userId={userId}></BuyPoints>
+    user && userId ? (
+      <div className="min-h-screen bg-slate-100 px-4 py-8 md:px-8">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+          <section className="grid gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <ProfilePageInfo
+                profileUserId={userId}
+                userData={user}
+              ></ProfilePageInfo>
+            </div>
+            <BuyPoints userId={userId}></BuyPoints>
+          </section>
+
+          <ProfilePageListings
+            listings={listings}
+            listingImages={listingImages}
+            listingsData={listingsData}
+          ></ProfilePageListings>
+        </div>
       </div>
-    <ProfilePageListings listings={listings} listingImages={listingImages} listingsData={listingsData}></ProfilePageListings>
-    </div>
-    : null
+    ) : null
   );
 }
 
