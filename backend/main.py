@@ -655,15 +655,38 @@ def get_messages(sender_id: str, recipient_id: str, db: Session = Depends(get_db
         .all()
     )
 
+@app.get("/user_message_by_id", tags=["Messages"])
+def get_messages(user_id: str, db: Session = Depends(get_db)):
+     
+     messages = db.query(UserMessages).filter(
+            or_(
+                UserMessages.sender_id == user_id, UserMessages.recipient_id == user_id
+            )
+        ).order_by(UserMessages.message_date.desc()).all()
+     foundUsers = []
+     selectedMessages = []
+     for msg in messages:
+        if msg.recipient_id != user_id:
+            if msg.recipient_id not in foundUsers:
+                foundUsers.append(msg.recipient_id)
+                selectedMessages.append(msg)
+        elif msg.sender_id != user_id:
+            if msg.sender_id not in foundUsers:
+                foundUsers.append(msg.sender_id)
+                selectedMessages.append(msg)
+     return selectedMessages
+
 @app.post("/user_messages", tags=["Messages"])
 def send_message(
     sender_id: str,
     recipient_id: str,
     message: str,
+    sender_username: str,
+    recipient_username: str,
     
     db: Session = Depends(get_db)
 ):
-    message = UserMessages(sender_id=sender_id, recipient_id=recipient_id, message=message)
+    message = UserMessages(sender_id=sender_id, recipient_id=recipient_id, message=message, sender_username=sender_username, recipient_username=recipient_username)
     db.add(message)
     db.commit()
     db.refresh(message)

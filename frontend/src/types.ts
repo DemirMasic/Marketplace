@@ -80,7 +80,9 @@ export type Locations = {
 
 export type UserMessages = {
   sender_id: string;
+  sender_username: string;
   recipient_id: string;
+  recipient_username: string;
   message: string;
   message_date: Date;
 }

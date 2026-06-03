@@ -100,7 +100,9 @@ class UserMessages(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     sender_id = Column(String, ForeignKey("users.id"))
+    sender_username = Column(String)
     recipient_id = Column(String, ForeignKey("users.id"))
+    recipient_username = Column(String)
     message = Column(String)
     message_date = Column(DateTime, default=datetime.datetime.now)
 

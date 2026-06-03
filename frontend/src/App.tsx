@@ -34,7 +34,7 @@ export default function App() {
             <Route path="/createlisting" element={<IsAuthenticated fallback={<Login></Login>}><CreateListing /></IsAuthenticated>}></Route>
             <Route path="/listing/:id" element={<IndividualListing />}></Route>
             <Route path="/profilepage/:userId" element={<ProfilePage />}></Route>
-            <Route path="/messages/:recipientId" element={<IsAuthenticated fallback={<Login></Login>}><UserMessages /></IsAuthenticated>}></Route>
+            <Route path="/messages" element={<IsAuthenticated fallback={<Login></Login>}><UserMessages /></IsAuthenticated>}></Route>
             <Route path="/payment-success" element={<PaymentSuccess></PaymentSuccess>}></Route>
             <Route path="/payment-cancel" element={<PaymentCancel></PaymentCancel>}></Route>
           </Routes>
