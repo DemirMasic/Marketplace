@@ -13,9 +13,10 @@ import CreateListing from "./views/CreateListing";
 import Registration from "./views/Registration";
 import IndividualListing from "./views/IndividualListing";
 import ProfilePage from "./views/ProfilePage";
-import UserMessages from "./views/UserMessages";
 import { PaymentSuccess } from "./views/PaymentSuccess";
 import { PaymentCancel } from "./views/PaymentCancel";
+import UserMessages from "./views/UserMessages";
+import EditProfile from "./views/EditProfile";
 
 export default function App() {
   return (
@@ -33,7 +34,8 @@ export default function App() {
             <Route path="/register" element={<Registration />}></Route>
             <Route path="/createlisting" element={<IsAuthenticated fallback={<Login></Login>}><CreateListing /></IsAuthenticated>}></Route>
             <Route path="/listing/:id" element={<IndividualListing />}></Route>
-            <Route path="/profilepage/:userId" element={<ProfilePage />}></Route>
+            <Route path="/profilepage/:profileUserId" element={<ProfilePage />}></Route>
+            <Route path="/profilepage/:profileUserId/edit" element={<IsAuthenticated fallback={<Login></Login>}><EditProfile /></IsAuthenticated>}></Route>
             <Route path="/messages" element={<IsAuthenticated fallback={<Login></Login>}><UserMessages /></IsAuthenticated>}></Route>
             <Route path="/payment-success" element={<PaymentSuccess></PaymentSuccess>}></Route>
             <Route path="/payment-cancel" element={<PaymentCancel></PaymentCancel>}></Route>

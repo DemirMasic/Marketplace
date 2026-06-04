@@ -29,7 +29,7 @@ function ProfilePageInfo({userData, profileUserId}: ProfilePageInfoProps) {
     <div className="flex flex-col gap-3">
       <span className="flex flex-row items-center gap-2">
         <img className="size-8" src={profilepic}></img>
-        <p className="font-semibold text-slate-900">{userData.username}</p>
+        <a href={`/profilepage/${profileUserId}`} className="font-semibold text-slate-900">{userData.username}</a>
       </span>
 
       <span className="flex flex-row items-center gap-2">
@@ -37,10 +37,18 @@ function ProfilePageInfo({userData, profileUserId}: ProfilePageInfoProps) {
         <p className="text-sm text-slate-600">{location?.name}</p>
       </span>  
     {userId===profileUserId?
-      <span className="flex flex-row items-center gap-2">
-        <img className="size-8" src={coin}></img>
-        <p className="text-sm text-slate-600">{userData.points} points</p>
-      </span> : null } 
+      <>
+        <span className="flex flex-row items-center gap-2">
+          <img className="size-8" src={coin}></img>
+          <p className="text-sm text-slate-600">{userData.points} points</p>
+        </span>
+        <a
+          href={`/profilepage/${profileUserId}/edit`}
+          className="mt-2 rounded-xl bg-orange-50 px-3 py-2 text-center text-sm font-semibold text-orange-600 transition hover:bg-orange-500 hover:text-white"
+        >
+          Edit profile information
+        </a>
+      </> : null } 
 
       {userId!==profileUserId? <a href={`/messages?user_id=${profileUserId}`} className="mt-2 flex flex-row items-center gap-2 rounded-xl bg-orange-50 px-3 py-2 text-sm font-semibold text-orange-600 transition hover:bg-orange-500 hover:text-white">
         <img className="size-8" src={messagepic}></img>

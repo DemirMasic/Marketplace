@@ -2,6 +2,21 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { RoleEnum, type Locations, type RegisterData } from "../types";
 
+const getErrorMessage = (result: any, fallback: string) => {
+  if (typeof result?.detail === "string") {
+    return result.detail;
+  }
+
+  if (Array.isArray(result?.detail) && result.detail.length > 0) {
+    return result.detail
+      .map((item: any) => item?.msg || item?.message)
+      .filter(Boolean)
+      .join(", ");
+  }
+
+  return result?.message || fallback;
+};
+
 function Registration() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -32,10 +47,17 @@ function Registration() {
       const response = await fetch(fetchUrl, {
         method: "POST"
       });
+
+      let result: any = {};
+      try {
+        result = await response.json();
+      } catch {
+        result = {};
+      }
   
       
       if (!response.ok) {
-        throw new Error("Registration failed");
+        throw new Error(getErrorMessage(result, "Registration failed"));
       }
   
   

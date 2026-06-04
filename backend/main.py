@@ -192,6 +192,12 @@ class User(BaseModel):
 class UserInDB(User):
     hashed_password: str
 
+class UserUpdate(BaseModel):
+    username: str
+    email: str
+    location_id: int
+    password: str | None = None
+
 password_hash = PasswordHash.recommended()
 DUMMY_HASH = password_hash.hash("dummypassword")
 
@@ -282,6 +288,16 @@ async def read_users_me(
     
 @app.post("/users", tags=["Users"])
 def create_user(username: str, email: str, password: str, role: RoleEnum, disabled: bool, location_id: str, db: Session = Depends(get_db)):
+    existing_user = db.query(UserModel).filter(
+        or_(UserModel.username == username, UserModel.email == email)
+    ).first()
+
+    if existing_user:
+        if existing_user.username == username:
+            raise HTTPException(status_code=400, detail="Username is already taken")
+
+        raise HTTPException(status_code=400, detail="Email is already registered")
+
     myuuid = str(uuid.uuid4())
     hashed_password = get_password_hash(password)
     user = UserModel(id=myuuid, username=username, email=email, hashed_password=hashed_password,role=role, disabled=disabled, location_id = location_id)
@@ -294,6 +310,18 @@ def create_user(username: str, email: str, password: str, role: RoleEnum, disabl
 def get_users(db: Session = Depends(get_db)):
     return db.query(UserModel).all()
 
+@app.get("/users_search", tags=["Users"])
+def get_users(search: str = "",db: Session = Depends(get_db)):
+    users = db.query(UserModel).where(UserModel.username.ilike(f'%{search}%')).all()
+    return [
+        {
+            "id": user.id,
+            "username": user.username,
+        }
+        for user in users
+    ]
+    
+
 @app.get("/locations", tags=["Location"])
 def get_locations(db: Session = Depends(get_db)):
     return db.query(Location).all()
@@ -305,6 +333,54 @@ def get_locations(id: int,db: Session = Depends(get_db)):
 @app.get("/get_user_by_id",response_model=User, tags=["Users"])
 def get_user_by_id(user_id: str, db: Session = Depends(get_db)):
     return db.query(UserModel).filter(UserModel.id == user_id).first()
+
+@app.put("/users/{user_id}", tags=["Users"])
+def update_user(
+    user_id: str,
+    data: UserUpdate,
+    current_user: Annotated[UserModel, Depends(get_current_active_user)],
+    db: Session = Depends(get_db)
+):
+    if current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="You can only edit your own profile")
+
+    user = db.query(UserModel).filter(UserModel.id == user_id).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    existing_user = db.query(UserModel).filter(
+        UserModel.id != user_id,
+        or_(UserModel.username == data.username, UserModel.email == data.email)
+    ).first()
+
+    if existing_user:
+        if existing_user.username == data.username:
+            raise HTTPException(status_code=400, detail="Username is already taken")
+
+        raise HTTPException(status_code=400, detail="Email is already registered")
+
+    user.username = data.username
+    user.email = data.email
+    user.location_id = data.location_id
+
+    if data.password is not None:
+        if not data.password.strip():
+            raise HTTPException(status_code=400, detail="Password cannot be empty")
+
+        user.hashed_password = get_password_hash(data.password)
+
+    db.commit()
+    db.refresh(user)
+
+    return {
+        "username": user.username,
+        "email": user.email,
+        "role": user.role,
+        "location_id": user.location_id,
+        "disabled": user.disabled,
+        "points": user.points,
+    }
 
 @app.get("/get_role", tags=["Users"])
 def get_users(id: str,db: Session = Depends(get_db)):

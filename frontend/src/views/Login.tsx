@@ -20,11 +20,11 @@ function Login() {
 
     try {
       await login({ username, password });
+      navigate("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
-      navigate("/")
     }
   };
 
