@@ -885,3 +885,7 @@ def get_reviews_for_user(id: int, comment: str, rating: int, db: Session = Depen
     db.refresh(review)
 
     return review
+
+@app.get("/highlighted_listings", tags=["Home"])
+def get_highlighted_listings(db: Session = Depends(get_db)):
+    return db.query(Listing).filter(Listing.highlighted_until > datetime.now()).all()

@@ -17,6 +17,7 @@ import { PaymentSuccess } from "./views/PaymentSuccess";
 import { PaymentCancel } from "./views/PaymentCancel";
 import UserMessages from "./views/UserMessages";
 import EditProfile from "./views/EditProfile";
+import Home from "./views/Home";
 
 export default function App() {
   return (
@@ -26,7 +27,7 @@ export default function App() {
         <BrowserRouter>
         <Navbar></Navbar>
           <Routes>
-            <Route path="/" element={<Categories />} />
+            <Route path="/" element={<Home />} />
             <Route path="/categories" element={<Categories />}></Route>
             <Route path="/create" element={<IsAuthorized><CreateCategory /></IsAuthorized>}></Route>
             <Route path="/listings" element={<Listings />}></Route>

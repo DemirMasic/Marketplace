@@ -85,7 +85,7 @@ export default function Navbar() {
           <span className="text-3xl font-bold text-orange-400">Market</span>
 
           <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-gray-300">
-            <a href="#" className="hover:text-white transition">
+            <a href="/" className="hover:text-white transition">
               Home
             </a>
             <a href="/categories" className="hover:text-white transition">
