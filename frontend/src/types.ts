@@ -89,5 +89,12 @@ export type UserMessages = {
   message_date: Date;
 }
 
-
+export type Review = {
+  id: number;
+  reviewing_user_id: string;
+  reviewing_username: string;
+  reviewed_user_id: string;
+  rating: number;
+  comment: string;
+}
 

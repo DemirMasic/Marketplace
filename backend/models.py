@@ -119,5 +119,26 @@ class UserMessages(Base):
         backref="received_messages"
     )
     
+class Reviews(Base):
+    __tablename__ = "reviews"
+
+    id = Column(Integer, primary_key=True, index=True)
+    reviewing_user_id = Column(String, ForeignKey("users.id"))
+    reviewing_username = Column(String)
+    reviewed_user_id = Column(String, ForeignKey("users.id"))
+    rating = Column(Integer)
+    comment = Column(String)
+
+    reviewing = relationship(
+        "UserModel",
+        foreign_keys=[reviewing_user_id],
+        backref="reviewing"
+    )
+
+    reviewed = relationship(
+        "UserModel",
+        foreign_keys=[reviewed_user_id],
+        backref="reviewed"
+    )
 
 

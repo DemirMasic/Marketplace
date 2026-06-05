@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 from filters import CategoryFilter, ExactFilter, Filter, RangeFilter, SearchFilter
 from constants import DataTypeEnum, RoleEnum
 from database import engine, Base, get_db
-from models import Attribute, AttributeData, Category, Listing, ListingAttributeData, ListingImages, Location, UserMessages, UserModel
+from models import Attribute, AttributeData, Category, Listing, ListingAttributeData, ListingImages, Location, Reviews, UserMessages, UserModel
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -851,3 +851,37 @@ async def  send_message(
         })
 
     return message
+
+@app.get("/reviews_all", tags=["Reviews"])
+def get_reviews(db: Session = Depends(get_db)):
+    return db.query(Reviews).all()
+
+@app.post("/new_review", tags=["Reviews"])
+def create_review(
+    reviewing_user_id: str,
+    reviewing_username: str,
+    reviewed_user_id: str,
+    rating: int,
+    comment: str,
+    db: Session = Depends(get_db)
+):
+    review = Reviews(reviewing_user_id=reviewing_user_id, reviewing_username=reviewing_username,reviewed_user_id=reviewed_user_id,rating=rating,comment=comment)
+    db.add(review)
+    db.commit()
+    db.refresh(review)
+
+    return review
+
+@app.get("/get_reviews_for_user", tags=["Reviews"])
+def get_reviews_for_user(id: str, db: Session = Depends(get_db)):
+    return db.query(Reviews).filter(Reviews.reviewed_user_id==id).all()
+
+@app.put("/edit_review", tags=["Reviews"])
+def get_reviews_for_user(id: int, comment: str, rating: int, db: Session = Depends(get_db)):
+    review = db.query(Reviews).filter(Reviews.id==id).first()
+    review.comment = comment
+    review.rating = rating
+    db.commit()
+    db.refresh(review)
+
+    return review
