@@ -2,8 +2,11 @@ import { useState } from "react";
 import type { ListingImage } from "../../types";
 import { ListingImageCarousel } from "./ListingImageCarousel";
 import deletepic from "../../assets/deletepic.png";
+import empty_heart from "../../assets/empty_heart.png";
+import full_heart from "../../assets/full_heart.png";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthProvider";
+import type { Dispatch, SetStateAction } from "react";
 
 type Props = {
   title: string;
@@ -11,6 +14,8 @@ type Props = {
   images: ListingImage[];
   id: string;
   listingUserId: string;
+  favorited: boolean;
+  setFavorited: Dispatch<SetStateAction<Boolean>>;
 };
 
 const deleteListing = async ({ id }: { id: string }) => {
@@ -24,7 +29,15 @@ const deleteListing = async ({ id }: { id: string }) => {
   }
 };
 
-export const ListingHeaderCard = ({ title, price, images, id, listingUserId }: Props) => {
+export const ListingHeaderCard = ({
+  title,
+  price,
+  images,
+  id,
+  listingUserId,
+  favorited,
+  setFavorited,
+}: Props) => {
   const { userId } = useAuth();
   const navigate = useNavigate();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -45,19 +58,57 @@ export const ListingHeaderCard = ({ title, price, images, id, listingUserId }: P
     }
   };
 
+  const addFavorite = async () => {
+    await fetch(`${import.meta.env.VITE_API_URL}/add_favorite?user_id=${userId}&listing_id=${id}`, {
+      method: "POST",
+    });
+  };
+
+  const deleteFavorite = async () => {
+    await fetch(`${import.meta.env.VITE_API_URL}/delete_favorite?user_id=${userId}&listing_id=${id}`, {
+      method: "DELETE",
+    });
+  };
+
+  const handleFavoriteClick = async () => {
+    if (!userId) return;
+
+    if (favorited) {
+      await deleteFavorite();
+    } else {
+      await addFavorite();
+    }
+    setFavorited(true);
+  };
+
   return (
     <div className="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="flex flex-row justify-between">
         <h1 className="mb-2 text-3xl font-bold text-gray-900">{title}</h1>
-        {userId === listingUserId ? (
-          <button
-            type="button"
-            onClick={() => setIsDeleteModalOpen(true)}
-            className="shrink-0"
-          >
-            <img className="size-8 cursor-pointer" src={deletepic} alt="Delete listing" />
-          </button>
-        ) : null}
+        <div className="flex shrink-0 items-center gap-3">
+          {userId ? (
+            <button
+              type="button"
+              onClick={handleFavoriteClick}
+              className="rounded-full bg-slate-50 p-2 shadow-sm transition hover:bg-orange-50"
+            >
+              <img
+                className="size-6 cursor-pointer"
+                src={favorited ? full_heart : empty_heart}
+                alt={favorited ? "Remove favorite" : "Add favorite"}
+              />
+            </button>
+          ) : null}
+          {userId === listingUserId ? (
+            <button
+              type="button"
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="rounded-full bg-slate-50 p-2 shadow-sm transition hover:bg-red-50"
+            >
+              <img className="size-6 cursor-pointer" src={deletepic} alt="Delete listing" />
+            </button>
+          ) : null}
+        </div>
       </div>
       <h4 className="mb-4 text-2xl font-semibold text-orange-400">
         {price ? `€${price}` : "Contact for price"}

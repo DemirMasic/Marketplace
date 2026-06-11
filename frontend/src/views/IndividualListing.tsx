@@ -22,10 +22,18 @@ function IndividualListing() {
   const [highlightPoints, setHighlightPoints] = useState(1);
   const [highlightError, setHighlightError] = useState("");
   const [isHighlighting, setIsHighlighting] = useState(false);
+  const [favorited, setFavorited] = useState<Boolean>(false);
 
 
   const loadListing = async () => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/listing_by_id?id=${id}`);
+    const params = new URLSearchParams();
+    if (id) {
+      params.set("id", id);
+    }
+    if (userId) {
+      params.set("user_id", userId);
+    }
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/listing_by_id?${params}`);
     const data = await res.json();
     setListingData(data.listing);
     setAttributes(data.attributes);
@@ -105,7 +113,8 @@ function IndividualListing() {
 
   useEffect(() => {
     loadListing();
-  }, [id]);
+    setFavorited(false);
+  }, [id, userId, favorited]);
   useEffect(() => {
     listingData &&
     loadUserData();
@@ -172,6 +181,8 @@ function IndividualListing() {
               price={price}
               images={images}
               listingUserId={listingData?.user_id || ""}
+              favorited={listingData?.favorited || false}
+              setFavorited={setFavorited}
             ></ListingHeaderCard>
             <ListingAttributesCard
               attributes={attributes}

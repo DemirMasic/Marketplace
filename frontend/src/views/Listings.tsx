@@ -6,6 +6,7 @@ import Categories from "./Categories";
 import { FilterBar } from "./components/FilterBar";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthProvider";
+import Pagination from "./components/Pagination";
 
 
 
@@ -14,16 +15,25 @@ function Listings() {
   const [listingsData, setListingsData] = useState<ListingAttributeData[]>([]);
   const [listingImages, setListingImages] = useState<ListingImage[]>([]);
   const { filters } = useFilters();
+  const serializedFilters = JSON.stringify(filters);
   const [searchParams] = useSearchParams();
   const category_id = searchParams.get("category_id")
   const { userId } = useAuth();
   const [favorited, setFavorited] = useState<Boolean>(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const loadListings = async () => {
     const params = new URLSearchParams();
-    params.set('filters', JSON.stringify(filters));
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/listings?${userId?`user_id=${userId}&`:""}${params}`);
+    params.set('filters', serializedFilters);
+    params.set("page", String(page));
+    params.set("page_size", "12");
+    if (userId) {
+      params.set("user_id", userId);
+    }
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/listings?${params}`);
     const data = await res.json();
-    setListings(data);
+    setListings(data.items);
+    setTotalPages(data.total_pages);
   };
 
   const loadListingData = async () => {
@@ -44,9 +54,13 @@ function Listings() {
   }, [searchParams]);
 
   useEffect(() => {
+    setPage(1);
+  }, [searchParams, serializedFilters]);
+
+  useEffect(() => {
     loadListings();
     setFavorited(false)
-  }, [searchParams, favorited]);
+  }, [searchParams, serializedFilters, userId, page, favorited]);
 
   return (
     <div className="mx-auto justify-center flex flex-col w-full min-h-screen bg-slate-100 px-4 py-8 md:px-8">
@@ -63,20 +77,24 @@ function Listings() {
         <div className="w-80">
           <Categories isListingsPage></Categories>
         </div>
-        {listings.length > 0 && (
-        <div className="items-start w-full auto-rows-min grid max-w-6xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {listings.map((listing) => (
-            <ListingCard setFavorited={setFavorited} userId={userId} listingsData={listingsData} listingImages={listingImages} key={listing.id} listing={listing} />
-          ))}
-          
-        </div>)}
+        <div className="flex w-full max-w-6xl flex-col gap-6">
+          {listings.length > 0 && (
+          <div className="items-start w-full auto-rows-min grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {listings.map((listing) => (
+              <ListingCard setFavorited={setFavorited} userId={userId} listingsData={listingsData} listingImages={listingImages} key={listing.id} listing={listing} />
+            ))}
+            
+          </div>)}
 
 
-        {listings.length === 0 && (
-          <div className="w-full mt-10 max-w-6xl rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
-            No listings found.
-          </div>
-        )}
+          {listings.length === 0 && (
+            <div className="w-full mt-10 rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
+              No listings found.
+            </div>
+          )}
+
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        </div>
       </div>
     </div>
   );

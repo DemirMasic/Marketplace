@@ -1,3 +1,4 @@
+import type { Dispatch, SetStateAction } from "react";
 import type { Listing, ListingAttributeData, ListingImage } from "../../types";
 import { ListingCard } from "./ListingCard";
 
@@ -5,9 +6,11 @@ type HomeListingsProps = {
   listings: Listing[];
   listingsData: ListingAttributeData[];
   listingImages: ListingImage[];
+  userId?: string;
+  setFavorited?: Dispatch<SetStateAction<Boolean>>;
 };
 
-function HomeListings({ listings, listingsData, listingImages }: HomeListingsProps) {
+function HomeListings({ listings, listingsData, listingImages, userId, setFavorited }: HomeListingsProps) {
   return (
     <section className="flex w-full flex-col gap-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -31,6 +34,8 @@ function HomeListings({ listings, listingsData, listingImages }: HomeListingsPro
                 listingImages={listingImages}
                 key={listing.id}
                 listing={listing}
+                userId={userId}
+                setFavorited={setFavorited}
               />
             ))}
           </div>

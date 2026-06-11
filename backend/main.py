@@ -10,7 +10,7 @@ import jwt
 from jwt.exceptions import InvalidTokenError
 from pwdlib import PasswordHash
 from pydantic import BaseModel, EmailStr
-from sqlalchemy import Float, and_, cast, null, or_, select
+from sqlalchemy import Float, and_, cast, func, null, or_, select
 
 from fastapi import BackgroundTasks, FastAPI, Query, Request, status, HTTPException, Depends, UploadFile, File
 from sqlalchemy.orm import Session
@@ -34,6 +34,11 @@ load_dotenv()
 
 app = FastAPI()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+def total_pages(total: int, page_size: int):
+    if total == 0:
+        return 1
+    return (total + page_size - 1) // page_size
 
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
@@ -552,7 +557,13 @@ def get_attribute_datas(
 
 
 @app.get("/listings", tags=["Listing"])
-def get_listings(user_id: str = "", filters: str = Query(default='[]'), db: Session = Depends(get_db)):
+def get_listings(
+    user_id: str = "",
+    filters: str = Query(default='[]'),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=12, ge=1, le=100),
+    db: Session = Depends(get_db)
+):
     raw = json.loads(filters)
 
     parsed_filters: list[Filter] = [
@@ -616,7 +627,12 @@ def get_listings(user_id: str = "", filters: str = Query(default='[]'), db: Sess
         else:
             query = query.where(Listing.name.ilike(f'%{search}%'))
     
-    listings = db.execute(query.order_by(Listing.highlighted_until.desc())).scalars().all()
+    total = db.execute(select(func.count()).select_from(query.subquery())).scalar()
+    listings = db.execute(
+        query.order_by(Listing.highlighted_until.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+    ).scalars().all()
     if user_id != "":
         favorite_ids = select(Favorites.listing_id).where(Favorites.user_id == user_id)
         favorites = db.execute(favorite_ids).scalars().all()
@@ -627,11 +643,23 @@ def get_listings(user_id: str = "", filters: str = Query(default='[]'), db: Sess
                 listing.favorited = True
     
             
-    return listings
+    return {
+        "items": listings,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages(total, page_size)
+    }
 
 @app.get("/listing_by_id", tags=["Listing"])
-def get_listings(id: int, db: Session = Depends(get_db)):
+def get_listings(id: int, user_id: str = "", db: Session = Depends(get_db)):
     listing_data = db.query(Listing).filter(Listing.id == id).first()
+    if listing_data and user_id != "":
+        favorite = db.query(Favorites).filter(
+            and_(Favorites.user_id == user_id, Favorites.listing_id == id)
+        ).first()
+        listing_data.favorited = favorite is not None
+
     attributes = db.query(Attribute).filter(or_(Attribute.category_id == listing_data.category_id, Attribute.category_id == None)).all()
     listing_attribute_data = db.query(ListingAttributeData).filter(ListingAttributeData.listing_id == id).all()
     images = db.query(ListingImages).filter(ListingImages.listing_id == id).all()
@@ -644,20 +672,44 @@ def get_listings(id: int, db: Session = Depends(get_db)):
 
 
 @app.get("/listing_by_user_id", tags=["Listing"])
-def get_listings(user_id: str, db: Session = Depends(get_db)):
-    listing_data = db.query(Listing).filter(Listing.user_id == user_id).all()
+def get_listings(
+    user_id: str,
+    favorite_user_id: str = "",
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=8, ge=1, le=100),
+    db: Session = Depends(get_db)
+):
+    query = db.query(Listing).filter(Listing.user_id == user_id)
+    total = query.count()
+    listing_data = query.offset((page - 1) * page_size).limit(page_size).all()
+    favorites_user_id = favorite_user_id or user_id
+    if favorites_user_id != "":
+        favorite_ids = select(Favorites.listing_id).where(Favorites.user_id == favorites_user_id)
+        favorites = db.execute(favorite_ids).scalars().all()
+        for listing in listing_data:
+            listing.favorited = listing.id in favorites
+
     if (len(listing_data) == 0):
         return {
         "listings": [],
         "listing_attribute_data": [],
-        "images": []
+        "images": [],
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages(total, page_size)
     }
-    listing_attribute_data = db.query(ListingAttributeData).all()
-    images = db.query(ListingImages).all()
+    listing_ids = [listing.id for listing in listing_data]
+    listing_attribute_data = db.query(ListingAttributeData).filter(ListingAttributeData.listing_id.in_(listing_ids)).all()
+    images = db.query(ListingImages).filter(ListingImages.listing_id.in_(listing_ids)).all()
     return {
         "listings": listing_data,
         "listing_attribute_data": listing_attribute_data,
-        "images": images
+        "images": images,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages(total, page_size)
     }
 
 @app.put("/highlight_listing", tags=["Listing"])
@@ -899,12 +951,79 @@ def get_reviews_for_user(id: int, comment: str, rating: int, db: Session = Depen
     return review
 
 @app.get("/highlighted_listings", tags=["Home"])
-def get_highlighted_listings(db: Session = Depends(get_db)):
-    return db.query(Listing).filter(Listing.highlighted_until > datetime.now()).all()
+def get_highlighted_listings(
+    user_id: str = "",
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=8, ge=1, le=100),
+    db: Session = Depends(get_db)
+):
+    query = db.query(Listing).filter(Listing.highlighted_until > datetime.now())
+    total = query.count()
+    listings = query.order_by(Listing.highlighted_until.desc()).offset((page - 1) * page_size).limit(page_size).all()
+    if user_id != "":
+        favorite_ids = select(Favorites.listing_id).where(Favorites.user_id == user_id)
+        favorites = db.execute(favorite_ids).scalars().all()
+        for listing in listings:
+            listing.favorited = listing.id in favorites
+
+    return {
+        "items": listings,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages(total, page_size)
+    }
 
 @app.get("/favorites", tags=["Favorites"])
 def get_favorites(db: Session = Depends(get_db)):
     return db.query(Favorites).all()
+
+@app.get("/favorite_listings", tags=["Favorites"])
+def get_favorite_listings(
+    user_id: str,
+    favorite_user_id: str = "",
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=8, ge=1, le=100),
+    db: Session = Depends(get_db)
+):
+    query = db.query(Listing).join(Favorites, Favorites.listing_id == Listing.id).filter(Favorites.user_id == user_id)
+    total = query.count()
+    listing_data = query.offset((page - 1) * page_size).limit(page_size).all()
+
+    if len(listing_data) == 0:
+        return {
+            "listings": [],
+            "listing_attribute_data": [],
+            "images": [],
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": total_pages(total, page_size)
+        }
+
+    favorites_user_id = favorite_user_id or user_id
+    favorites = db.execute(
+        select(Favorites.listing_id).where(Favorites.user_id == favorites_user_id)
+    ).scalars().all()
+
+    for listing in listing_data:
+        listing.favorited = listing.id in favorites
+
+    listing_ids = [listing.id for listing in listing_data]
+    listing_attribute_data = db.query(ListingAttributeData).filter(
+        ListingAttributeData.listing_id.in_(listing_ids)
+    ).all()
+    images = db.query(ListingImages).filter(ListingImages.listing_id.in_(listing_ids)).all()
+
+    return {
+        "listings": listing_data,
+        "listing_attribute_data": listing_attribute_data,
+        "images": images,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages(total, page_size)
+    }
 
 @app.post("/add_favorite", tags=["Favorites"])
 def create_favorite(
