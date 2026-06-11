@@ -5,6 +5,7 @@ import { useFilters } from "../hooks/useFilter";
 import Categories from "./Categories";
 import { FilterBar } from "./components/FilterBar";
 import { useSearchParams } from "react-router-dom";
+import { useAuth } from "../contexts/AuthProvider";
 
 
 
@@ -15,11 +16,12 @@ function Listings() {
   const { filters } = useFilters();
   const [searchParams] = useSearchParams();
   const category_id = searchParams.get("category_id")
-  
+  const { userId } = useAuth();
+  const [favorited, setFavorited] = useState<Boolean>(false);
   const loadListings = async () => {
     const params = new URLSearchParams();
     params.set('filters', JSON.stringify(filters));
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/listings?${params}`);
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/listings?${userId?`user_id=${userId}&`:""}${params}`);
     const data = await res.json();
     setListings(data);
   };
@@ -39,8 +41,12 @@ function Listings() {
   useEffect(() => {
     loadListingImages();
     loadListingData();
-    loadListings();
   }, [searchParams]);
+
+  useEffect(() => {
+    loadListings();
+    setFavorited(false)
+  }, [searchParams, favorited]);
 
   return (
     <div className="mx-auto justify-center flex flex-col w-full min-h-screen bg-slate-100 px-4 py-8 md:px-8">
@@ -60,7 +66,7 @@ function Listings() {
         {listings.length > 0 && (
         <div className="items-start w-full auto-rows-min grid max-w-6xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {listings.map((listing) => (
-            <ListingCard listingsData={listingsData} listingImages={listingImages} key={listing.id} listing={listing} />
+            <ListingCard setFavorited={setFavorited} userId={userId} listingsData={listingsData} listingImages={listingImages} key={listing.id} listing={listing} />
           ))}
           
         </div>)}

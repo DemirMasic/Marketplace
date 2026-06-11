@@ -71,6 +71,7 @@ class Listing(Base):
     description = Column(String)
     highlighted_until = Column(DateTime, default=datetime.datetime.now)
 
+    favorited = Column(Boolean, default=False)
 
     category = relationship("Category", backref="listing")
     user = relationship("UserModel", backref="listing")
@@ -139,6 +140,25 @@ class Reviews(Base):
         "UserModel",
         foreign_keys=[reviewed_user_id],
         backref="reviewed"
+    )
+
+class Favorites(Base):
+    __tablename__ = "favorites"
+
+    id = Column(Integer, primary_key=True, index=True)
+    listing_id = Column(Integer, ForeignKey("listing.id"))
+    user_id = Column(String, ForeignKey("users.id"))
+    
+    listing = relationship(
+        "Listing",
+        foreign_keys=[listing_id],
+        backref="favorites"
+    )
+
+    user = relationship(
+        "UserModel",
+        foreign_keys=[user_id],
+        backref="favorites"
     )
 
 

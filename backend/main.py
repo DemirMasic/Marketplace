@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 from filters import CategoryFilter, ExactFilter, Filter, RangeFilter, SearchFilter
 from constants import DataTypeEnum, RoleEnum
 from database import engine, Base, get_db
-from models import Attribute, AttributeData, Category, Listing, ListingAttributeData, ListingImages, Location, Reviews, UserMessages, UserModel
+from models import Attribute, AttributeData, Category, Favorites, Listing, ListingAttributeData, ListingImages, Location, Reviews, UserMessages, UserModel
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -552,7 +552,7 @@ def get_attribute_datas(
 
 
 @app.get("/listings", tags=["Listing"])
-def get_listings(filters: str = Query(default='[]'), db: Session = Depends(get_db)):
+def get_listings(user_id: str = "", filters: str = Query(default='[]'), db: Session = Depends(get_db)):
     raw = json.loads(filters)
 
     parsed_filters: list[Filter] = [
@@ -615,7 +615,19 @@ def get_listings(filters: str = Query(default='[]'), db: Session = Depends(get_d
             query = query.where(and_(Listing.name.ilike(f'%{search}%')),(Listing.category_id.in_(matching_category_ids)))
         else:
             query = query.where(Listing.name.ilike(f'%{search}%'))
-    return db.execute(query.order_by(Listing.highlighted_until.desc())).scalars().all()
+    
+    listings = db.execute(query.order_by(Listing.highlighted_until.desc())).scalars().all()
+    if user_id != "":
+        favorite_ids = select(Favorites.listing_id).where(Favorites.user_id == user_id)
+        favorites = db.execute(favorite_ids).scalars().all()
+        print(favorite_ids)
+        print(favorites)
+        for listing in listings:
+            if listing.id in favorites:
+                listing.favorited = True
+    
+            
+    return listings
 
 @app.get("/listing_by_id", tags=["Listing"])
 def get_listings(id: int, db: Session = Depends(get_db)):
@@ -889,3 +901,30 @@ def get_reviews_for_user(id: int, comment: str, rating: int, db: Session = Depen
 @app.get("/highlighted_listings", tags=["Home"])
 def get_highlighted_listings(db: Session = Depends(get_db)):
     return db.query(Listing).filter(Listing.highlighted_until > datetime.now()).all()
+
+@app.get("/favorites", tags=["Favorites"])
+def get_favorites(db: Session = Depends(get_db)):
+    return db.query(Favorites).all()
+
+@app.post("/add_favorite", tags=["Favorites"])
+def create_favorite(
+    user_id: str,
+    listing_id: int,
+    db: Session = Depends(get_db)
+):
+    favorite = Favorites(user_id=user_id,listing_id=listing_id)
+    db.add(favorite)
+    db.commit()
+    db.refresh(favorite)
+
+    return favorite
+
+@app.delete("/delete_favorite", tags=["Favorites"])
+def delete_favorite(user_id: str, listing_id: int, db: Session = Depends(get_db)):
+
+    favorite = db.query(Favorites).filter(and_(Favorites.user_id == user_id, Favorites.listing_id == listing_id)).first()
+    if favorite:
+        db.delete(favorite)
+        db.commit()
+        return {"deleted": True}
+    return {"deleted": False}

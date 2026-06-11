@@ -38,6 +38,7 @@ export type Listing = {
   user_id: string;
   description: string;
   highlighted_until?: string;
+  favorited: boolean;
 };
 
 export type AttributeData = {
