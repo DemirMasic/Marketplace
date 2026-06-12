@@ -203,6 +203,10 @@ class UserUpdate(BaseModel):
     location_id: int
     password: str | None = None
 
+class GoogleSignupRequest(BaseModel):
+    credential: str
+    location_id: int = 1
+
 password_hash = PasswordHash.recommended()
 DUMMY_HASH = password_hash.hash("dummypassword")
 
@@ -218,6 +222,19 @@ def get_user(username: str, db: Session = Depends(get_db)):
     user = db.query(UserModel).filter(UserModel.username == username).first()
     if user:
         return user
+
+def get_available_username(base_username: str, db: Session):
+    username = "".join(char for char in base_username.lower() if char.isalnum() or char == "_").strip("_")
+    if username == "":
+        username = "google_user"
+
+    candidate = username
+    count = 1
+    while db.query(UserModel).filter(UserModel.username == candidate).first():
+        candidate = f"{username}{count}"
+        count += 1
+
+    return candidate
 
 def authenticate_user(username: str, password: str, db: Session = Depends(get_db)):
     user = get_user(username, db)
@@ -279,6 +296,55 @@ async def login_for_access_token(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    access_token_expires = timedelta(minutes=float(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")))
+    access_token = create_access_token(
+        data={"sub": user.username, "jti": user.id}, expires_delta=access_token_expires
+    )
+    return Token(access_token=access_token, token_type="bearer")
+
+@app.post("/google_signup", tags=["Users"])
+async def google_signup(data: GoogleSignupRequest, db: Session = Depends(get_db)) -> Token:
+    google_client_id = os.getenv("GOOGLE_CLIENT_ID")
+    if not google_client_id:
+        raise HTTPException(status_code=500, detail="Google sign up is not configured")
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            "https://oauth2.googleapis.com/tokeninfo",
+            params={"id_token": data.credential},
+        )
+
+    if response.status_code != 200:
+        raise HTTPException(status_code=401, detail="Invalid Google credential")
+
+    google_user = response.json()
+    if google_user.get("aud") != google_client_id:
+        raise HTTPException(status_code=401, detail="Invalid Google credential audience")
+
+    if google_user.get("email_verified") not in ["true", True]:
+        raise HTTPException(status_code=400, detail="Google email is not verified")
+
+    email = google_user.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="Google account has no email")
+
+    user = db.query(UserModel).filter(UserModel.email == email).first()
+    if not user:
+        base_username = google_user.get("name") or email.split("@")[0]
+        username = get_available_username(base_username, db)
+        user = UserModel(
+            id=str(uuid.uuid4()),
+            username=username,
+            email=email,
+            hashed_password=get_password_hash(str(uuid.uuid4())),
+            role=RoleEnum.USER,
+            disabled=False,
+            location_id=data.location_id,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
     access_token_expires = timedelta(minutes=float(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")))
     access_token = create_access_token(
         data={"sub": user.username, "jti": user.id}, expires_delta=access_token_expires

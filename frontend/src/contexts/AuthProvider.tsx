@@ -1,9 +1,5 @@
 import { useContext, createContext, useState } from "react";
-import Categories from "../views/Categories";
-import CreateCategory from "../views/CreateCategory";
-import Login from "../views/Login";
 import React from "react";
-import { createBrowserRouter } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import type { LoginData } from "../types";
 
@@ -17,6 +13,8 @@ type AuthContextType = {
   userId: string;
   userName: string;
   login: (data: LoginData) => Promise<void>;
+  googleLogin: (credential: string) => Promise<void>;
+  googleSignup: (credential: string, locationId: string) => Promise<void>;
   logout: () => void;
   updateUserName: (name: string) => void;
 };
@@ -26,6 +24,8 @@ const AuthContext = createContext<AuthContextType>({
   userId: "",
   userName: "",
   login: async () => {},
+  googleLogin: async () => {},
+  googleSignup: async () => {},
   logout: () => {},
   updateUserName: () => {},
 });
@@ -47,37 +47,6 @@ const getErrorMessage = (result: any, fallback: string) => {
   return result?.message || fallback;
 };
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Categories />,
-    children: [
-      {
-        path: "/unauthenticated",
-        element: <Categories />,
-      },
-      {
-        path: "/authenticated",
-        element: <Categories />,
-      },
-      {
-        path: "/authenticated-and-authorized",
-        element: <CreateCategory />,
-      },
-    ],
-  },
-  {
-    path: "/login",
-    element: <Login />,
-  },
-  {
-    path: "*",
-    element: <h1>404 page not found!!</h1>,
-  },
-]);
-
-export default router;
-
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const initialToken = localStorage.getItem(TOKEN_KEY) || "";
   const initialDecoded: DecodedToken = initialToken ? jwtDecode(initialToken) : {};
@@ -85,6 +54,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [token, setToken] = useState(initialToken);
   const [userName, setUserName] = useState(initialDecoded.sub || "");
   const [userId, setUserId] = useState(initialDecoded.jti || "");
+
+  const saveToken = (accessToken: string, redirectTo?: (decoded: DecodedToken) => string) => {
+    const decoded: DecodedToken = jwtDecode(accessToken);
+
+    setToken(accessToken);
+    setUserId(decoded.jti || "");
+    setUserName(decoded.sub || "");
+    localStorage.setItem(TOKEN_KEY, accessToken);
+
+    window.location.assign(redirectTo ? redirectTo(decoded) : "/");
+  };
 
   const login = async (data: LoginData) => {
     const formData = new FormData();
@@ -111,14 +91,49 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       throw new Error("No access token returned");
     }
 
-    const decoded: DecodedToken = jwtDecode(result.access_token);
+    saveToken(result.access_token);
+  };
 
-    setToken(result.access_token);
-    setUserId(decoded.jti || "");
-    setUserName(decoded.sub || "");
-    localStorage.setItem(TOKEN_KEY, result.access_token);
+  const authenticateWithGoogle = async (credential: string, locationId?: string) => {
+    const body: { credential: string; location_id?: number } = { credential };
+    if (locationId) {
+      body.location_id = Number(locationId);
+    }
 
-    router.navigate("/");
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/google_signup`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    let result: any = {};
+    try {
+      result = await response.json();
+    } catch {
+      result = {};
+    }
+
+    if (!response.ok) {
+      throw new Error(getErrorMessage(result, "Google sign up failed"));
+    }
+
+    if (!result.access_token) {
+      throw new Error("No access token returned");
+    }
+
+    return result.access_token;
+  };
+
+  const googleLogin = async (credential: string) => {
+    const accessToken = await authenticateWithGoogle(credential);
+    saveToken(accessToken);
+  };
+
+  const googleSignup = async (credential: string, locationId: string) => {
+    const accessToken = await authenticateWithGoogle(credential, locationId);
+    saveToken(accessToken, (decoded) => decoded.jti ? `/profilepage/${decoded.jti}/edit` : "/");
   };
 
   const logout = () => {
@@ -126,7 +141,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setToken("");
     setUserName("");
     localStorage.removeItem(TOKEN_KEY);
-    router.navigate("/login");
+    window.location.assign("/login");
   };
 
   const updateUserName = (name: string) => {
@@ -134,7 +149,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ token, userId, userName, login, logout, updateUserName }}>
+    <AuthContext.Provider value={{ token, userId, userName, login, googleLogin, googleSignup, logout, updateUserName }}>
       {children}
     </AuthContext.Provider>
   );

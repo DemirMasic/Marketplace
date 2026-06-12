@@ -1,6 +1,31 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { RoleEnum, type Locations, type RegisterData } from "../types";
+import { useAuth } from "../contexts/AuthProvider";
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: {
+            client_id: string;
+            callback: (response: { credential?: string }) => void;
+          }) => void;
+          renderButton: (
+            element: HTMLElement,
+            options: {
+              theme?: string;
+              size?: string;
+              width?: number;
+              text?: string;
+            },
+          ) => void;
+        };
+      };
+    };
+  }
+}
 
 const getErrorMessage = (result: any, fallback: string) => {
   if (typeof result?.detail === "string") {
@@ -19,10 +44,13 @@ const getErrorMessage = (result: any, fallback: string) => {
 
 function Registration() {
   const navigate = useNavigate();
+  const { googleSignup } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
   const [locations, setLocations] = useState<Locations[]>([])
   const [locationId, setLocationId] = useState<string>("1")
+  const googleButtonRef = useRef<HTMLDivElement>(null);
   
   const loadLocations = async () => {
     const res = await fetch(`${import.meta.env.VITE_API_URL}/locations`);
@@ -32,6 +60,54 @@ function Registration() {
   useEffect(() => {
     loadLocations();
   }, []);
+
+  useEffect(() => {
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!googleClientId || !googleButtonRef.current) return;
+
+    const renderGoogleButton = () => {
+      if (!window.google || !googleButtonRef.current) return;
+
+      googleButtonRef.current.innerHTML = "";
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: async (response) => {
+          if (!response.credential) {
+            setError("Google sign up failed");
+            return;
+          }
+
+          setError("");
+          setGoogleLoading(true);
+          try {
+            await googleSignup(response.credential, locationId);
+          } catch (err) {
+            setError(err instanceof Error ? err.message : "Google sign up failed");
+          } finally {
+            setGoogleLoading(false);
+          }
+        },
+      });
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        theme: "outline",
+        size: "large",
+        width: 352,
+        text: "signup_with",
+      });
+    };
+
+    if (window.google) {
+      renderGoogleButton();
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.defer = true;
+    script.onload = renderGoogleButton;
+    document.body.appendChild(script);
+  }, [googleSignup, locationId]);
 
   const register = async (data: RegisterData) => {
      
@@ -187,9 +263,23 @@ function Registration() {
             disabled={loading}
             className="w-full rounded-xl bg-orange-500 py-3 text-sm font-semibold text-white transition hover:bg-orange-400 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-orange-300 disabled:active:scale-100"
           >
-            {loading ? "Signing in..." : "Sign in"}
+            {loading ? "Signing up..." : "Sign up"}
           </button>
         </form>
+
+        <div className="my-6 flex items-center gap-3">
+          <div className="h-px flex-1 bg-slate-200" />
+          <span className="text-xs font-semibold uppercase text-slate-400">or</span>
+          <div className="h-px flex-1 bg-slate-200" />
+        </div>
+
+        {import.meta.env.VITE_GOOGLE_CLIENT_ID ? (
+          <div className={googleLoading ? "pointer-events-none opacity-60" : ""} ref={googleButtonRef} />
+        ) : (
+          <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            Google sign up needs VITE_GOOGLE_CLIENT_ID.
+          </p>
+        )}
 
         <div className="mt-6 text-center text-sm text-slate-600">
           Already have an account?{" "}
