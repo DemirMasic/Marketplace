@@ -1,7 +1,9 @@
 from datetime import timedelta, timezone, datetime
+import html
 from http.client import HTTPException
 import json
 from typing import Annotated, List, Optional
+from urllib.parse import quote
 import uuid
 
 import cloudinary
@@ -69,7 +71,7 @@ def send_email_background(background_tasks: BackgroundTasks, email: EmailSchema)
         subject=email.subject,
         recipients=email.email,
         body=email.body,
-        subtype=MessageType.plain
+        subtype=MessageType.html
     )
 
     fm = FastMail(conf)
@@ -807,9 +809,9 @@ def highlight_listing(
     highlighted_until = listing.highlighted_until or current_time
 
     if current_time > highlighted_until:
-        listing.highlighted_until = current_time + timedelta(seconds=points)
+        listing.highlighted_until = current_time + timedelta(seconds=points*100)
     else:
-        listing.highlighted_until = highlighted_until + timedelta(seconds=points)
+        listing.highlighted_until = highlighted_until + timedelta(seconds=points*100)
 
     user.points -= points
     db.commit()
@@ -973,11 +975,52 @@ async def  send_message(
     db.commit()
     db.refresh(message)
     user = db.query(UserModel).filter(UserModel.id == recipient_id).first()
+    safe_sender_username = html.escape(sender_username)
+    safe_recipient_username = html.escape(recipient_username)
+    safe_message_preview = html.escape(message.message or "")
+    conversation_url = f"{FRONTEND_URL}/messages?user_id={quote(sender_id, safe='')}"
+    email_body = f"""
+    <!doctype html>
+    <html>
+      <body style="margin:0; background-color:#f1f5f9; font-family:Arial, Helvetica, sans-serif; color:#0f172a;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f1f5f9; padding:32px 16px;">
+          <tr>
+            <td align="center">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px; overflow:hidden; border:1px solid #e2e8f0; border-radius:18px; background-color:#ffffff;">
+                <tr>
+                  <td style="background-color:#fff7ed; border-bottom:1px solid #fed7aa; padding:24px 28px;">
+                    <p style="margin:0 0 6px; color:#ea580c; font-size:13px; font-weight:700; letter-spacing:0.02em;">Marketplace message</p>
+                    <h1 style="margin:0; color:#0f172a; font-size:24px; line-height:1.25;">You have a new message</h1>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:28px;">
+                    <p style="margin:0 0 18px; color:#334155; font-size:16px; line-height:1.6;">
+                      Hi {safe_recipient_username}, <strong style="color:#0f172a;">{safe_sender_username}</strong> sent you a message on Marketplace.
+                    </p>
+                    <div style="margin:0 0 24px; border:1px solid #e2e8f0; border-radius:16px; background-color:#f8fafc; padding:18px 20px;">
+                      <p style="margin:0; color:#475569; font-size:15px; line-height:1.6;">{safe_message_preview}</p>
+                    </div>
+                    <a href="{conversation_url}" style="display:inline-block; border-radius:999px; background-color:#f97316; color:#ffffff; font-size:14px; font-weight:700; line-height:1; padding:14px 20px; text-decoration:none;">
+                      Open conversation
+                    </a>
+                    <p style="margin:24px 0 0; color:#64748b; font-size:13px; line-height:1.6;">
+                      Reply from your Marketplace inbox to keep the conversation in one place.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+    </html>
+    """
     async with httpx.AsyncClient() as client:
         await client.post("http://localhost:8000/send-email", json={
             "email": [user.email],
             "subject": "You have received a new message!",
-            "body": f"Hello, {sender_username} has sent you a message"
+            "body": email_body
         })
 
     return message
